@@ -8,7 +8,7 @@ begin
 	$db_rows = ScraperWiki.sqliteexecute("SELECT council_reference FROM swdata").to_a
 rescue
 	$db_rows = []
-
+end
 """
 Request and extract the description from the link seen below, modularised due to a separate rest call
 Returns the retrieved description, or an empty string if there is none
@@ -214,7 +214,7 @@ def scrape(cutoff_date=Date.today.prev_day)
   puts "Done, #{data.length} new rows found"
   #return data
   total = data.length
-   data.each do |record|
+  data.each do |record|
 	ScraperWiki.save_sqlite(['council_reference'], record)
   end
 end
