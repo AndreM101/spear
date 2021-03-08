@@ -1,7 +1,7 @@
 require 'faraday'
-require 'JSON'
+require 'json'
 require 'scraperwiki'
-require 'Date'
+require 'date'
 
 $token
 begin
@@ -74,7 +74,7 @@ def get_set_of_rows(id, start_row)
   url = 'https://www.spear.land.vic.gov.au/spear/api/v1/applicationlist/publicSearch'
   resp = Faraday.post(url) do |req|
     req.headers['authorization'] = "Bearer #{$token}"
-    req.headers['content-type'] = 'application/json'
+    req.headers['content-type'] = 'application/JSON'
     req.headers['accept'] = '*/*'
 
     req.body = '{ "data": { "applicationListSearchRequest": { "searchFilters": [{ "id": "completed", "selected": ["ALL"] }], "searchText": null, "myApplications": false, "watchedApplications": false, "searchInitiatedByUserClickEvent": false, "sortField": "SPEAR_REF", "sortDirection": "desc", "startRow": ' + start_row.to_s + '}, "tab": "ALL", "filterString": "", "completedFilterString": "ALL", "responsibleAuthoritySiteId": ' + id.to_s + '  } }'
@@ -92,7 +92,7 @@ def get_row_count(id)
   url = 'https://www.spear.land.vic.gov.au/spear/api/v1/applicationlist/publicSearch'
   resp = Faraday.post(url) do |req|
     req.headers['authorization'] = "Bearer #{$token}"
-    req.headers['content-type'] = 'application/json'
+    req.headers['content-type'] = 'application/JSON'
     req.headers['accept'] = '*/*'
 
     req.body = '{ "data": { "applicationListSearchRequest": { "searchFilters": [{ "id": "completed", "selected": ["ALL"] }], "searchText": null, "myApplications": false, "watchedApplications": false, "searchInitiatedByUserClickEvent": false, "sortField": "SPEAR_REF", "sortDirection": "desc", "startRow": 0 }, "tab": "ALL", "filterString": "", "completedFilterString": "ALL", "responsibleAuthoritySiteId": '+ id.to_s + '  } }' 
@@ -103,10 +103,10 @@ def get_row_count(id)
 end
 
 """
-Retrieves the entire set of rows for a given id and cutoff date (only rows after this date will be passed along, a nil value will fetch all dates)
+Retrieves the entire set of rows for a given id and cutoff Date (only rows after this Date will be passed along, a nil value will fetch all Dates)
 Returns an array of hashes
 """
-def get_whole_id_set(id, cutoff_date)
+def get_whole_id_set(id, cutoff_Date)
   # Rows can only be gathered in groups of 35, and indexed by the starting row number, so these must be calculated to avoid unnecessary calls
   row_count = get_row_count(id)
   number_of_iterations = (row_count / 35).floor + 1
@@ -116,7 +116,7 @@ def get_whole_id_set(id, cutoff_date)
     output = get_set_of_rows(id, start * 35)
     output.each do |row|
 	  next if seenRows.include?(row['spearReference'])
-	  next if not check_date(row['submittedDate'], cutoff_date)
+	  next if not check_Date(row['submittedDate'], cutoff_Date)
 	  
       complete_row_set.append(row)
       seenRows.append(row['spearReference'])
@@ -149,9 +149,9 @@ def process_row_set(row_set)
           'address' => row['property'],
           'info_url' => info_url,
           # 'comment_url' => comment_url,
-          'date_scraped' => Date.today.to_s
+          'Date_scraped' => Date.today.to_s
         }
-        record['date_received'] = Date.strptime(row['submittedDate'], '%d/%m/%Y').to_s if row['submittedDate']
+        record['Date_received'] = Date.strptime(row['submittedDate'], '%d/%m/%Y').to_s if row['submittedDate']
 
         # Get more detailed information by going to the application detail page (but only if necessary)
         begin
@@ -177,7 +177,7 @@ def find_ids
 
   resp = Faraday.post(url) do |req|
     req.headers['authorization'] = "Bearer #{$token}"
-    req.headers['content-type'] = 'application/json'
+    req.headers['content-type'] = 'application/JSON'
 
     req.body = '{"data":{"searchType":"publicsearch","searchTypeFilter":"all","searchText":null,"showInactiveSites":false}}'
   end
@@ -192,19 +192,19 @@ end
 
 
 """
-Main function for the script, accepts a cutoff date as input
-	- rows after the cutoff date will be included
-	- a nil value will include all dates
+Main function for the script, accepts a cutoff Date as input
+	- rows after the cutoff Date will be included
+	- a nil value will include all Dates
 Returns the final dataset as an array of rows
 """
-def scrape(cutoff_date=Date.today.prev_day)
-  cutoff_date = cutoff_date.strftime('%d/%m/%Y')
+def scrape(cutoff_Date=Date.today.prev_day)
+  cutoff_Date = cutoff_Date.strftime('%d/%m/%Y')
   $token = get_token
   id_set = find_ids
   all_rows = []
   puts "Found #{id_set.length} council datasets"
   id_set.each do |id|
-    output = get_whole_id_set(id, cutoff_date)
+    output = get_whole_id_set(id, cutoff_Date)
     puts "Gathered #{output.length} rows for id #{id}"
     all_rows += output
   end
@@ -226,15 +226,15 @@ def check_db(id)
   return $db_rows.include? row
 end
 
-# determines whether a row is within the cutoff date or not
-def check_date(row_date, cutoff_date)
-    if cutoff_date.nil?
+# determines whether a row is within the cutoff Date or not
+def check_Date(row_Date, cutoff_Date)
+    if cutoff_Date.nil?
 		return true
-	elsif row_date.nil?
+	elsif row_Date.nil?
 		return false
 	end
-	row_split = row_date.split("/")
-	cutoff_split = cutoff_date.split("/")
+	row_split = row_Date.split("/")
+	cutoff_split = cutoff_Date.split("/")
 	if cutoff_split[2].to_i < row_split[2].to_i
 		return true
 	elsif cutoff_split[2].to_i == row_split[2].to_i && cutoff_split[1].to_i < row_split[1].to_i
