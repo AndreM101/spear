@@ -1,4 +1,4 @@
-require 'Faraday'
+require 'faraday'
 require 'JSON'
 require 'scraperwiki'
 require 'Date'
