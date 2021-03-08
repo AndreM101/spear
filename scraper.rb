@@ -113,16 +113,18 @@ def get_whole_id_set(id, cutoff_Date)
   seenRows = []
   complete_row_set = []
   (0..number_of_iterations).each do |start|
-    output = get_set_of_rows(id, start * 35)
-    output.each do |row|
-	  next if seenRows.include?(row['spearReference'])
-	  next if not check_Date(row['submittedDate'], cutoff_Date)
-	  
-      complete_row_set.append(row)
-      seenRows.append(row['spearReference'])
+    begin
+      output = get_set_of_rows(id, start * 35)
+      output.each do |row|
+  	    next if seenRows.include?(row['spearReference'])
+	    next if not check_Date(row['submittedDate'], cutoff_Date)
+        complete_row_set.append(row)
+        seenRows.append(row['spearReference'])
+	  end
+	rescue
+	  next
     end
   end
-
   complete_row_set
 end
 
