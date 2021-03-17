@@ -166,7 +166,6 @@ def process_row_set(row_set)
 		info_url = "https://www.spear.land.vic.gov.au/spear/app/public/applications/#{summary[0].to_s}/summary"
 		record['info_url'] = info_url
         record['description'] = row['applicationTypeDisplay'] if record['description'] == ''
-		puts record
         set_of_records.append(record)
 	end
   end
