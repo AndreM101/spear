@@ -39,11 +39,11 @@ def extract_description(url)
 	  end
 	  #puts JSON.parse(resp.body.to_s + '\n\n')
 	  if JSON.parse(resp.body)['data'].nil?
-		return ""
+		return [linkId, ""]
 	  end
-	  JSON.parse(resp.body)['data']['intendedUse']
+	  [linkId, JSON.parse(resp.body)['data']['intendedUse']]
   rescue
-    return ''
+    return [linkId, '']
   end
 end
 
@@ -144,12 +144,11 @@ def process_row_set(row_set)
 	  puts "Processing row " + counter.to_s + " out of " + total.to_s
 	  if not check_db(row['spearReference'])
   	    
-	    info_url = "https://www.spear.land.vic.gov.au/spear/api/v1/applications/retrieve/#{row['spearReference']}?publicView=true"
+	    summary_url = "https://www.spear.land.vic.gov.au/spear/api/v1/applications/retrieve/#{row['spearReference']}?publicView=true"
         record = {
           # We're using the SPEAR Ref # because we want that to be unique across the "authority"
           'council_reference' => row['spearReference'],
           'address' => row['property'],
-          'info_url' => info_url,
           # 'comment_url' => comment_url,
           'Date_scraped' => Date.today.to_s
         }
@@ -157,12 +156,17 @@ def process_row_set(row_set)
 
         # Get more detailed information by going to the application detail page (but only if necessary)
         begin
-          record['description'] = extract_description(info_url).to_s
+		  summary = extract_description(summary_url)
+          record['description'] = summary[1].to_s
 	    rescue
 	      $token = new_token()
-		  record['description'] = extract_description(info_url).to_s
+ 		  summary = extract_description(summary_url)
+		  record['description'] = summary[1].to_s
 	    end
+		info_url = "https://www.spear.land.vic.gov.au/spear/app/public/applications/#{summary[0].to_s}/summary"
+		record['info_url'] = info_url
         record['description'] = row['applicationTypeDisplay'] if record['description'] == ''
+		puts record
         set_of_records.append(record)
 	end
   end
@@ -249,5 +253,3 @@ def check_Date(row_Date, cutoff_Date)
 end
 
 scrape
-
-
